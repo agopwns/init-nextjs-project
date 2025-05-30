@@ -1,0 +1,356 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Global Cursor Rules
+globs: 
+alwaysApply: true
+---
+
+You are an expert in JavaScript, React, Node.js, Next.js App Router, Zustand, Tailwind, and shadcn/ui.
+
+Directory Structure
+
+- src
+- src/app: Next.js App Routers
+- src/app/api: Next.js API routes
+- src/app/store: Zustand stores
+- src/actions: server actions
+- src/components: shadcn/ui based components
+- src/components/ui: shadcn/ui components
+- src/database: database models
+- src/hooks: Common hooks
+- src/lib: utility functions
+- src/example: example implementations and project templates
+
+## Reservation Platform Directory Structure
+
+### Customer Pages
+- src/app/(customer): Customer-facing pages with grouped layout
+- src/app/(customer)/page.js: Main landing page
+- src/app/(customer)/auth: Authentication pages
+- src/app/(customer)/auth/login/page.js: Login page
+- src/app/(customer)/auth/register/page.js: Registration page
+- src/app/(customer)/products: Product-related pages
+- src/app/(customer)/products/page.js: Product list page
+- src/app/(customer)/products/[id]: Product detail pages
+- src/app/(customer)/products/[id]/page.js: Product detail with calendar booking
+- src/app/(customer)/booking: Booking and payment pages
+- src/app/(customer)/booking/[productId]/page.js: Booking confirmation and payment
+
+### Admin Pages
+- src/app/(admin): Admin panel with grouped layout
+- src/app/(admin)/dashboard: Admin dashboard pages
+- src/app/(admin)/dashboard/page.js: Main dashboard with reservation approval
+- src/app/(admin)/dashboard/payments/page.js: Payment management dashboard
+- src/app/(admin)/dashboard/analytics/page.js: Sales and reservation statistics
+- src/app/(admin)/products: Product management pages
+- src/app/(admin)/products/page.js: Product management list
+- src/app/(admin)/products/new/page.js: Product registration page
+- src/app/(admin)/products/[id]/edit/page.js: Product edit page
+
+### API Routes
+- src/app/api/auth: Authentication API routes
+- src/app/api/products: Product CRUD API routes
+- src/app/api/reservations: Reservation management API routes
+- src/app/api/payments: Payment processing API routes
+- src/app/api/admin: Admin-specific API routes
+
+### Components Structure
+- src/components/customer: Customer-facing components
+- src/components/customer/product-card.js: Product display card
+- src/components/customer/booking-calendar.js: Calendar component for booking
+- src/components/customer/payment-form.js: Payment form component
+- src/components/admin: Admin panel components
+- src/components/admin/product-form.js: Product creation/edit form
+- src/components/admin/reservation-table.js: Reservation management table
+- src/components/admin/analytics-chart.js: Analytics and statistics charts
+- src/components/shared: Shared components between customer and admin
+- src/components/shared/header.js: Navigation header
+- src/components/shared/footer.js: Footer component
+
+### Store Structure (Zustand)
+- src/app/store/auth-store.js: Authentication state management
+- src/app/store/product-store.js: Product data state management
+- src/app/store/booking-store.js: Booking process state management
+- src/app/store/admin-store.js: Admin panel state management
+
+### Database Models
+- src/database/models/user.js: User model (customers and admins)
+- src/database/models/product.js: Product/service model
+- src/database/models/reservation.js: Reservation booking model
+- src/database/models/payment.js: Payment transaction model
+- src/database/models/availability.js: Product availability/schedule model
+
+## Data Models Schema
+
+### User Model
+```javascript
+// src/database/models/user.js
+const userSchema = {
+  id: 'string', // UUID
+  email: 'string', // unique
+  password: 'string', // hashed
+  name: 'string',
+  phone: 'string',
+  role: 'enum', // 'customer' | 'admin'
+  isVerified: 'boolean',
+  createdAt: 'datetime',
+  updatedAt: 'datetime'
+}
+```
+
+### Product Model
+```javascript
+// src/database/models/product.js
+const productSchema = {
+  id: 'string', // UUID
+  title: 'string',
+  description: 'text',
+  price: 'decimal',
+  duration: 'integer', // minutes
+  category: 'string',
+  images: 'array', // image URLs
+  isActive: 'boolean',
+  maxParticipants: 'integer',
+  location: 'string',
+  requirements: 'text',
+  createdBy: 'string', // admin user ID
+  createdAt: 'datetime',
+  updatedAt: 'datetime'
+}
+```
+
+### Reservation Model
+```javascript
+// src/database/models/reservation.js
+const reservationSchema = {
+  id: 'string', // UUID
+  productId: 'string', // foreign key
+  userId: 'string', // foreign key
+  reservationDate: 'datetime',
+  participants: 'integer',
+  totalAmount: 'decimal',
+  status: 'enum', // 'pending' | 'confirmed' | 'cancelled' | 'completed'
+  specialRequests: 'text',
+  paymentId: 'string', // foreign key
+  createdAt: 'datetime',
+  updatedAt: 'datetime'
+}
+```
+
+### Payment Model
+```javascript
+// src/database/models/payment.js
+const paymentSchema = {
+  id: 'string', // UUID
+  reservationId: 'string', // foreign key
+  amount: 'decimal',
+  currency: 'string', // default 'KRW'
+  paymentMethod: 'enum', // 'card' | 'transfer' | 'mobile'
+  paymentProvider: 'string', // 'toss' | 'iamport' etc.
+  transactionId: 'string', // provider transaction ID
+  status: 'enum', // 'pending' | 'completed' | 'failed' | 'refunded'
+  paidAt: 'datetime',
+  createdAt: 'datetime',
+  updatedAt: 'datetime'
+}
+```
+
+### Availability Model
+```javascript
+// src/database/models/availability.js
+const availabilitySchema = {
+  id: 'string', // UUID
+  productId: 'string', // foreign key
+  date: 'date',
+  timeSlots: 'array', // available time slots
+  maxBookings: 'integer',
+  currentBookings: 'integer',
+  isBlocked: 'boolean', // admin can block specific dates
+  createdAt: 'datetime',
+  updatedAt: 'datetime'
+}
+```
+
+### Server Actions Structure
+- src/actions/auth-actions.js: Authentication server actions
+- src/actions/product-actions.js: Product CRUD server actions
+- src/actions/reservation-actions.js: Reservation management server actions
+- src/actions/payment-actions.js: Payment processing server actions
+- src/actions/admin-actions.js: Admin-specific server actions
+
+### Hooks Structure
+- src/hooks/use-auth.js: Authentication related hooks
+- src/hooks/use-products.js: Product data fetching hooks
+- src/hooks/use-reservations.js: Reservation management hooks
+- src/hooks/use-calendar.js: Calendar functionality hooks
+- src/hooks/use-payment.js: Payment processing hooks
+
+Code Style and Structure
+
+- Write concise, technical JavaScript code following Standard.js rules.
+- Use functional and declarative programming patterns; avoid classes.
+- Prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+- Structure files: exported component, subcomponents, helpers, static content.
+
+Standard.js Rules
+
+- Use 2 space indentation.
+- Use single quotes for strings except to avoid escaping.
+- No semicolons (unless required to disambiguate statements).
+- No unused variables.
+- Add a space after keywords.
+- Add a space before a function declaration's parentheses.
+- Always use === instead of ==.
+- Infix operators must be spaced.
+- Commas should have a space after them.
+- Keep else statements on the same line as their curly braces.
+- For multi-line if statements, use curly braces.
+- Always handle the err function parameter.
+- Use camelcase for variables and functions.
+- Use PascalCase for constructors and React components.
+
+Naming Conventions
+
+- Use lowercase with dashes for directories (e.g., components/auth-wizard).
+- Favor named exports for components.
+- Always import stores from '@/app/store' path
+
+React Best Practices
+
+- Use functional components with prop-types for type checking.
+- Use the "function" keyword for component definitions.
+- Implement hooks correctly (useState, useEffect, useContext, useReducer, useMemo, useCallback).
+- Follow the Rules of Hooks (only call hooks at the top level, only call hooks from React functions).
+- Create custom hooks to extract reusable component logic.
+- Use React.memo() for component memoization when appropriate.
+- Implement useCallback for memoizing functions passed as props.
+- Use useMemo for expensive computations.
+- Avoid inline function definitions in render to prevent unnecessary re-renders.
+- Prefer composition over inheritance.
+- Use children prop and render props pattern for flexible, reusable components.
+- Implement React.lazy() and Suspense for code splitting.
+- Use refs sparingly and mainly for DOM access.
+- Prefer controlled components over uncontrolled components.
+- Implement error boundaries to catch and handle errors gracefully.
+- Use cleanup functions in useEffect to prevent memory leaks.
+- Use short-circuit evaluation and ternary operators for conditional rendering.
+
+State Management
+
+- Use Zustand for global state management.
+- Lift state up when needed to share state between components.
+- Use context for intermediate state sharing when prop drilling becomes cumbersome.
+
+UI and Styling
+
+- Use shadcn/ui for component foundations and pre-built components.
+- Place shadcn/ui components in src/components/ui directory.
+- Leverage shadcn/ui's design system and component variants.
+- Use Tailwind CSS for styling shadcn/ui components and custom styles.
+- Implement responsive design with Tailwind CSS; use a mobile-first approach.
+- Use CSS Modules for component-specific styles when needed:
+  - Create a .module.css file for each component that needs custom styling.
+  - Use camelCase for class names in CSS module files.
+  - Combine Tailwind utility classes with CSS modules when necessary.
+- Implement a consistent naming convention for CSS classes (e.g., BEM) within CSS modules.
+- Use Tailwind for utility classes and rapid prototyping.
+- Combine Tailwind utility classes with shadcn/ui components:
+  - Use shadcn/ui components as the foundation.
+  - Extend styling with Tailwind utility classes.
+  - Customize component variants using shadcn/ui's variant system.
+  - Never use the @apply directive
+
+shadcn/ui Best Practices
+
+- Import components from '@/components/ui' path.
+- Use component variants and size props provided by shadcn/ui.
+- Customize themes using CSS variables in globals.css.
+- Leverage shadcn/ui's built-in accessibility features.
+- Use shadcn/ui's form components with react-hook-form for form handling.
+- Implement dark mode using shadcn/ui's theme system.
+- Follow shadcn/ui naming conventions and component structure.
+
+File Structure for Styling
+
+- Place CSS module files next to their corresponding component files.
+- Keep shadcn/ui components in src/components/ui directory.
+- Place custom components that extend shadcn/ui in src/components directory.
+
+Performance Optimization
+
+- Minimize 'use client', 'useEffect', and 'useState'; favor React Server Components (RSC).
+- Wrap client components in Suspense with fallback.
+- Use dynamic loading for non-critical components.
+- Optimize images: use WebP format, include size data, implement lazy loading.
+- Implement route-based code splitting in Next.js.
+- Minimize the use of global styles; prefer modular, scoped styles.
+- Use PurgeCSS with Tailwind to remove unused styles in production.
+
+Forms and Validation
+
+- Use controlled components for form inputs.
+- Implement form validation (client-side and server-side).
+- Consider using libraries like react-hook-form for complex forms.
+- Use Zod or Joi for schema validation.
+
+Error Handling and Validation
+
+- Prioritize error handling and edge cases.
+- Handle errors and edge cases at the beginning of functions.
+- Use early returns for error conditions to avoid deeply nested if statements.
+- Place the happy path last in the function for improved readability.
+- Avoid unnecessary else statements; use if-return pattern instead.
+- Use guard clauses to handle preconditions and invalid states early.
+- Implement proper error logging and user-friendly error messages.
+- Model expected errors as return values in Server Actions.
+
+Accessibility (a11y)
+
+- Use semantic HTML elements.
+- Implement proper ARIA attributes.
+- Ensure keyboard navigation support.
+
+Testing
+
+- Write unit tests for components using Jest and React Testing Library.
+- Implement integration tests for critical user flows.
+- Use snapshot testing judiciously.
+
+Security
+
+- Sanitize user inputs to prevent XSS attacks.
+- Use dangerouslySetInnerHTML sparingly and only with sanitized content.
+
+Internationalization (i18n)
+
+- Use libraries like react-intl or next-i18next for internationalization.
+
+Key Conventions
+
+- Use 'nuqs' for URL search parameter state management.
+- Optimize Web Vitals (LCP, CLS, FID).
+- Limit 'use client':
+  - Favor server components and Next.js SSR.
+  - Use only for Web API access in small components.
+  - Avoid for data fetching or state management.
+- Balance the use of Tailwind utility classes with shadcn/ui components:
+  - Use Tailwind for rapid development and consistent spacing/sizing.
+  - Use shadcn/ui components for complex, unique component styles.
+
+Use following libraries for specific functionalities:
+
+- `date-fns`: date and time handling.
+- `@tanstack/react-query`: server state management.
+- `zustand`: global state management.
+- `react-use`: common hooks.
+- `lucide-react`: icons.
+
+Follow Next.js docs for Data Fetching, Rendering, and Routing.
+Additionally, Tanstack Query is recommended for data fetching and state management
+
+Always write Toast and Console messages in English.
