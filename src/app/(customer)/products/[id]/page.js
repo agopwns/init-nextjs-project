@@ -57,20 +57,20 @@ export default async function ProductDetailPage({ params }) {
                         <p className="text-gray-600 mb-6">{product.description}</p>
 
                         <div className="space-y-4 mb-6">
-                            <div className="flex items-center">
-                                <span className="text-gray-500 w-20">📍 위치:</span>
+                            <div className="flex items-center flex-nowrap">
+                                <span className="text-gray-500 w-32 flex-shrink-0">📍 위치:</span>
                                 <span className="text-gray-900">{product.location}</span>
                             </div>
-                            <div className="flex items-center">
-                                <span className="text-gray-500 w-20">⏱️ 소요시간:</span>
+                            <div className="flex items-center flex-nowrap">
+                                <span className="text-gray-500 w-32 flex-shrink-0">⏱️ 소요시간:</span>
                                 <span className="text-gray-900">{product.duration}분</span>
                             </div>
-                            <div className="flex items-center">
-                                <span className="text-gray-500 w-20">👥 최대인원:</span>
+                            <div className="flex items-center flex-nowrap">
+                                <span className="text-gray-500 w-32 flex-shrink-0">👥 최대인원:</span>
                                 <span className="text-gray-900">{product.maxParticipants}명</span>
                             </div>
-                            <div className="flex items-center">
-                                <span className="text-gray-500 w-20">📋 요구사항:</span>
+                            <div className="flex items-center flex-nowrap">
+                                <span className="text-gray-500 w-32 flex-shrink-0">📋 요구사항:</span>
                                 <span className="text-gray-900">{product.requirements}</span>
                             </div>
                         </div>
