@@ -6,7 +6,7 @@ export function ProductCard({ product }) {
         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
             <div className="relative h-48 bg-gray-200">
                 <img
-                    src={product.images[0]}
+                    src={product.images?.[0] || '/placeholder-image.jpg'}
                     alt={product.title}
                     className="w-full h-full object-cover"
                 />
@@ -37,10 +37,10 @@ export function ProductCard({ product }) {
 
                 <div className="flex items-center justify-between mb-4">
                     <div className="text-sm text-gray-500">
-                        <span>👥 최대 {product.maxParticipants}명</span>
+                        <span>👥 최대 {product.max_participants}명</span>
                     </div>
                     <div className="text-lg font-bold text-blue-600">
-                        ₩{product.price.toLocaleString()}
+                        ₩{Number(product.price).toLocaleString()}
                     </div>
                 </div>
 
