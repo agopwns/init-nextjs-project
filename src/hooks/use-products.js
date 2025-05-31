@@ -61,4 +61,47 @@ export function useProductsByCategory(category = '전체') {
         error,
         refetch
     }
+}
+
+export function useProduct(productId) {
+    const [product, setProduct] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+
+    useEffect(() => {
+        if (!productId) {
+            setLoading(false)
+            return
+        }
+        fetchProduct()
+    }, [productId])
+
+    async function fetchProduct() {
+        try {
+            setLoading(true)
+            setError(null)
+
+            const response = await fetch(`/api/products/${productId}`)
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || '상품 정보를 가져올 수 없습니다')
+            }
+
+            setProduct(data)
+
+        } catch (err) {
+            setError(err.message)
+            console.error('상품 상세 정보 가져오기 실패:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return {
+        product,
+        loading,
+        error,
+        refetch: fetchProduct
+    }
 } 
