@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProductCarousel } from '@/components/shared/product-carousel';
+import { AuthStatus } from '@/components/auth/auth-status';
 
 export default function Home() {
   return (
@@ -25,9 +26,9 @@ export default function Home() {
                 상품 둘러보기
               </Button>
             </Link>
-            <Button variant="outline" size="lg">
-              로그인
-            </Button>
+
+            {/* 인증 상태에 따른 버튼 표시 */}
+            <AuthStatus />
           </div>
         </div>
       </div>
