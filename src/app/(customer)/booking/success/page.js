@@ -1,21 +1,16 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
-export default function BookingSuccessPage() {
+// useSearchParams를 사용하는 컴포넌트를 별도로 분리
+function BookingSuccessContent() {
     const searchParams = useSearchParams()
     const reservationId = searchParams.get('reservationId')
     const [reservation, setReservation] = useState(null)
     const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        if (reservationId) {
-            fetchReservationDetails()
-        }
-    }, [reservationId])
 
     const fetchReservationDetails = async () => {
         try {
@@ -31,6 +26,12 @@ export default function BookingSuccessPage() {
             setLoading(false)
         }
     }
+
+    useEffect(() => {
+        if (reservationId) {
+            fetchReservationDetails()
+        }
+    }, [reservationId, fetchReservationDetails])
 
     return (
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -166,5 +167,30 @@ export default function BookingSuccessPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+// 로딩 컴포넌트
+function BookingSuccessLoading() {
+    return (
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="text-center">
+                <div className="animate-pulse">
+                    <div className="mx-auto h-24 w-24 rounded-full bg-gray-200 mb-8"></div>
+                    <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-8"></div>
+                    <div className="h-32 bg-gray-200 rounded mb-8"></div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// 메인 컴포넌트 - Suspense로 감싸기
+export default function BookingSuccessPage() {
+    return (
+        <Suspense fallback={<BookingSuccessLoading />}>
+            <BookingSuccessContent />
+        </Suspense>
     )
 } 
