@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { signUp } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -44,15 +43,32 @@ export function RegisterForm() {
             setError('')
             setMessage('')
 
-            const result = await signUp(email, password, name, phone)
+            try {
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        name,
+                        phone
+                    })
+                })
 
-            if (result.success) {
-                setMessage('회원가입이 완료되었습니다. 이메일을 확인해주세요.')
-                // 폼 리셋
-                e.target.reset()
-                setShowPassword(false)
-            } else {
-                setError(result.error)
+                const result = await response.json()
+
+                if (result.success) {
+                    setMessage('회원가입이 완료되었습니다. 이메일을 확인해주세요.')
+                    // 폼 리셋
+                    e.target.reset()
+                    setShowPassword(false)
+                } else {
+                    setError(result.error)
+                }
+            } catch (error) {
+                setError('회원가입 중 오류가 발생했습니다')
             }
         })
     }
