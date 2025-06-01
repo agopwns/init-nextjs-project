@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerClient } from '@/lib/supabase'
+import { getUsersInfo, getUserInfo } from './user-actions'
 
 // 예약 목록 조회 (관리자용)
 export async function getReservations(filters = {}) {
@@ -25,6 +26,17 @@ export async function getReservations(filters = {}) {
           price,
           duration,
           location
+        ),
+        payments (
+          id,
+          amount,
+          currency,
+          payment_method,
+          payment_provider,
+          transaction_id,
+          status,
+          paid_at,
+          created_at
         )
       `)
             .order('created_at', { ascending: false })
@@ -57,13 +69,26 @@ export async function getReservations(filters = {}) {
             return { success: false, error: '예약 목록을 불러오는데 실패했습니다.' }
         }
 
-        // auth.users 테이블에 직접 접근할 수 없으므로, 
-        // 기본적인 사용자 정보는 클라이언트에서 제공하거나 별도 처리
+        // 사용자 ID 수집
+        const userIds = reservations
+            ?.filter(reservation => reservation.user_id)
+            .map(reservation => reservation.user_id) || []
+
+        // 사용자 정보 조회
+        let usersData = {}
+        if (userIds.length > 0) {
+            const usersResult = await getUsersInfo(userIds)
+            if (usersResult.success) {
+                usersData = usersResult.data
+            }
+        }
+
+        // 사용자 정보 추가
         const reservationsWithUsers = reservations.map(reservation => ({
             ...reservation,
-            users: {
-                email: `user-${reservation.user_id.slice(0, 8)}@example.com`, // 임시 이메일
-                name: `사용자-${reservation.user_id.slice(0, 8)}`, // 임시 이름
+            users: usersData[reservation.user_id] || {
+                email: `user-${reservation.user_id.slice(0, 8)}@example.com`,
+                name: `사용자-${reservation.user_id.slice(0, 8)}`,
                 phone: null
             }
         }))
@@ -103,11 +128,15 @@ export async function getReservationDetail(reservationId) {
           images
         ),
         payments (
+          id,
           amount,
           currency,
           payment_method,
+          payment_provider,
+          transaction_id,
           status,
-          paid_at
+          paid_at,
+          created_at
         )
       `)
             .eq('id', reservationId)
@@ -118,14 +147,24 @@ export async function getReservationDetail(reservationId) {
             return { success: false, error: '예약 정보를 불러오는데 실패했습니다.' }
         }
 
-        // 임시 사용자 정보 추가
+        // 사용자 정보 조회
+        let userData = {
+            email: `user-${reservation.user_id.slice(0, 8)}@example.com`,
+            name: `사용자-${reservation.user_id.slice(0, 8)}`,
+            phone: null
+        }
+
+        if (reservation.user_id) {
+            const userResult = await getUserInfo(reservation.user_id)
+            if (userResult.success) {
+                userData = userResult.data
+            }
+        }
+
+        // 사용자 정보 추가
         const reservationWithUser = {
             ...reservation,
-            users: {
-                email: `user-${reservation.user_id.slice(0, 8)}@example.com`,
-                name: `사용자-${reservation.user_id.slice(0, 8)}`,
-                phone: null
-            }
+            users: userData
         }
 
         return { success: true, data: reservationWithUser }
@@ -247,5 +286,55 @@ export async function getReservationsByDateRange(startDate, endDate) {
     } catch (error) {
         console.error('날짜별 예약 조회 중 오류:', error)
         return { success: false, error: '서버 오류가 발생했습니다.' }
+    }
+}
+
+// 예약 생성
+export async function createReservation(reservationData) {
+    try {
+        const supabase = createServerClient()
+
+        // 예약 데이터 검증
+        if (!reservationData.productId || !reservationData.userId || !reservationData.reservationDate) {
+            return {
+                success: false,
+                error: '필수 정보가 누락되었습니다.'
+            }
+        }
+
+        const { data, error } = await supabase
+            .from('reservations')
+            .insert([
+                {
+                    product_id: reservationData.productId,
+                    user_id: reservationData.userId,
+                    reservation_date: reservationData.reservationDate,
+                    participants: reservationData.participants || 1,
+                    total_amount: reservationData.totalAmount,
+                    special_requests: reservationData.specialRequests,
+                    status: 'pending'
+                }
+            ])
+            .select()
+            .single()
+
+        if (error) {
+            console.error('예약 생성 오류:', error)
+            return {
+                success: false,
+                error: '예약 생성에 실패했습니다.'
+            }
+        }
+
+        return {
+            success: true,
+            data
+        }
+    } catch (error) {
+        console.error('예약 생성 중 오류:', error)
+        return {
+            success: false,
+            error: '서버 오류가 발생했습니다.'
+        }
     }
 } 

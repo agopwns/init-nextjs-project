@@ -6,12 +6,17 @@ import { ko } from 'date-fns/locale'
 import { useReservationStore } from '@/app/store/reservation-store'
 import { useReservations } from '@/hooks/use-reservations'
 import { updateReservationStatus, getReservationDetail } from '@/actions/reservation-actions'
+import { getPaymentStatus } from '@/actions/payment-actions'
 import ReservationDetailModal from '@/components/admin/reservation-detail-modal'
+import PaymentDetailModal from '@/components/admin/payment-detail-modal'
 
 export default function ReservationsPage() {
     const [selectedReservation, setSelectedReservation] = useState(null)
+    const [selectedPayment, setSelectedPayment] = useState(null)
     const [showDetailModal, setShowDetailModal] = useState(false)
+    const [showPaymentModal, setShowPaymentModal] = useState(false)
     const [actionLoading, setActionLoading] = useState(null)
+    const [paymentLoading, setPaymentLoading] = useState(null)
 
     const {
         filters,
@@ -68,12 +73,48 @@ export default function ReservationsPage() {
         }
     }
 
+    const handleViewPayment = async (reservation) => {
+        if (!reservation.payments || reservation.payments.length === 0) {
+            alert('결제 정보가 없습니다.')
+            return
+        }
+
+        setPaymentLoading(reservation.id)
+        try {
+            // 결제 정보를 가져와서 모달에 표시
+            const payment = reservation.payments[0] // 첫 번째 결제 정보 사용
+            setSelectedPayment(payment)
+            setShowPaymentModal(true)
+        } catch (error) {
+            console.error('결제 정보 로딩 오류:', error)
+            alert('결제 정보를 불러오는 중 오류가 발생했습니다.')
+        } finally {
+            setPaymentLoading(null)
+        }
+    }
+
     const getStatusBadge = (status) => {
         const statusConfig = {
             pending: { label: '대기 중', class: 'bg-yellow-100 text-yellow-800' },
             confirmed: { label: '확정', class: 'bg-green-100 text-green-800' },
             cancelled: { label: '취소', class: 'bg-red-100 text-red-800' },
             completed: { label: '완료', class: 'bg-blue-100 text-blue-800' }
+        }
+
+        const config = statusConfig[status] || statusConfig.pending
+        return (
+            <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.class}`}>
+                {config.label}
+            </span>
+        )
+    }
+
+    const getPaymentStatusBadge = (status) => {
+        const statusConfig = {
+            pending: { label: '결제 대기', class: 'bg-yellow-100 text-yellow-800' },
+            completed: { label: '결제 완료', class: 'bg-green-100 text-green-800' },
+            failed: { label: '결제 실패', class: 'bg-red-100 text-red-800' },
+            refunded: { label: '환불 완료', class: 'bg-gray-100 text-gray-800' }
         }
 
         const config = statusConfig[status] || statusConfig.pending
@@ -250,7 +291,10 @@ export default function ReservationsPage() {
                                         금액
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        상태
+                                        예약 상태
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        결제 상태
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         액션
@@ -281,6 +325,12 @@ export default function ReservationsPage() {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             {getStatusBadge(reservation.status)}
                                         </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {reservation.payments && reservation.payments.length > 0
+                                                ? getPaymentStatusBadge(reservation.payments[0].status)
+                                                : <span className="text-gray-400 text-xs">결제 없음</span>
+                                            }
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                             {reservation.status === 'pending' && (
                                                 <>
@@ -306,6 +356,15 @@ export default function ReservationsPage() {
                                             >
                                                 상세
                                             </button>
+                                            {reservation.payments && reservation.payments.length > 0 && (
+                                                <button
+                                                    onClick={() => handleViewPayment(reservation)}
+                                                    disabled={paymentLoading === reservation.id}
+                                                    className="text-purple-600 hover:text-purple-900 disabled:opacity-50"
+                                                >
+                                                    {paymentLoading === reservation.id ? '로딩...' : '결제/환불'}
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -323,6 +382,19 @@ export default function ReservationsPage() {
                     setSelectedReservation(null)
                 }}
                 reservation={selectedReservation}
+            />
+
+            {/* 결제 상세 정보 모달 */}
+            <PaymentDetailModal
+                isOpen={showPaymentModal}
+                onClose={() => {
+                    setShowPaymentModal(false)
+                    setSelectedPayment(null)
+                }}
+                payment={selectedPayment}
+                onRefundSuccess={() => {
+                    refreshData()
+                }}
             />
         </div>
     )

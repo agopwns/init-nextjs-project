@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useReservationStore } from '@/app/store/reservation-store'
 import {
     getReservations,
     getReservationDetail,
-    getReservationStats
+    getReservationStats,
+    createReservation
 } from '@/actions/reservation-actions'
 
 export function useReservations() {
@@ -112,4 +113,38 @@ export function useReservationDetail(reservationId) {
     }, [reservationId, loadReservationDetail])
 
     return { getDetail }
+}
+
+export function useCreateReservation() {
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
+
+    const createReservationHandler = useCallback(async (reservationData) => {
+        setLoading(true)
+        setError(null)
+
+        try {
+            const result = await createReservation(reservationData)
+
+            if (result.success) {
+                return result.data
+            } else {
+                setError(result.error)
+                throw new Error(result.error)
+            }
+        } catch (error) {
+            console.error('예약 생성 오류:', error)
+            setError(error.message || '예약 생성 중 오류가 발생했습니다.')
+            throw error
+        } finally {
+            setLoading(false)
+        }
+    }, [])
+
+    return {
+        createReservation: createReservationHandler,
+        loading,
+        error,
+        clearError: () => setError(null)
+    }
 } 

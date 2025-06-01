@@ -24,8 +24,12 @@ export function ReservationPayment({
         try {
             // 1. 먼저 예약을 생성합니다 (pending 상태)
             const fullReservationData = {
-                ...reservationData,
-                userId: user.id
+                productId: reservationData.productId,
+                userId: user.id,
+                reservationDate: reservationData.reservationDate,
+                participants: reservationData.participants,
+                totalAmount: totalAmount,
+                specialRequests: reservationData.specialRequests
             }
 
             const reservation = await createReservation(fullReservationData)
