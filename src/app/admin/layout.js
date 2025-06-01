@@ -3,11 +3,17 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { NotificationIcon } from '@/components/admin/notification-icon'
+import { useRealtimeNotifications } from '@/hooks/use-realtime-notifications'
+import { Toaster } from 'sonner'
 
 export default function AdminLayout({ children }) {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
     const router = useRouter()
+
+    // 실시간 알림 구독
+    useRealtimeNotifications()
 
     useEffect(() => {
         const checkUserRole = async (currentUser) => {
@@ -61,6 +67,16 @@ export default function AdminLayout({ children }) {
         }
     }, [router])
 
+    // 로그아웃 핸들러
+    const handleLogout = async () => {
+        try {
+            await supabase.auth.signOut()
+            router.push('/')
+        } catch (error) {
+            console.error('Error signing out:', error)
+        }
+    }
+
     // 로딩 중일 때 표시할 화면
     if (loading) {
         return (
@@ -85,13 +101,30 @@ export default function AdminLayout({ children }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <h1 className="text-xl font-semibold text-gray-900">관리자 대시보드</h1>
-                        <nav className="flex space-x-8">
-                            <a href="/admin/dashboard" className="text-gray-600 hover:text-gray-900">대시보드</a>
-                            <a href="/admin/products" className="text-gray-600 hover:text-gray-900">상품 관리</a>
-                            <a href="/admin/dashboard/reservations" className="text-gray-600 hover:text-gray-900">예약 관리</a>
-                            <a href="/admin/dashboard/payments" className="text-gray-600 hover:text-gray-900">결제 관리</a>
-                            <a href="/admin/dashboard/analytics" className="text-gray-600 hover:text-gray-900">통계</a>
-                        </nav>
+
+                        <div className="flex items-center space-x-6">
+                            <nav className="flex space-x-8">
+                                <a href="/admin/dashboard" className="text-gray-600 hover:text-gray-900">대시보드</a>
+                                <a href="/admin/products" className="text-gray-600 hover:text-gray-900">상품 관리</a>
+                                <a href="/admin/dashboard/reservations" className="text-gray-600 hover:text-gray-900">예약 관리</a>
+                                <a href="/admin/dashboard/payments" className="text-gray-600 hover:text-gray-900">결제 관리</a>
+                                <a href="/admin/dashboard/analytics" className="text-gray-600 hover:text-gray-900">통계</a>
+                            </nav>
+
+                            {/* 알림 아이콘 */}
+                            <NotificationIcon />
+
+                            {/* 사용자 정보 및 로그아웃 */}
+                            <div className="flex items-center space-x-3">
+                                <span className="text-sm text-gray-600">{user.email}</span>
+                                <button
+                                    onClick={handleLogout}
+                                    className="text-sm text-gray-600 hover:text-gray-900"
+                                >
+                                    로그아웃
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -100,6 +133,9 @@ export default function AdminLayout({ children }) {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {children}
             </main>
+
+            {/* 토스트 알림 */}
+            <Toaster position="top-right" />
         </div>
     )
 } 
