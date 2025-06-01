@@ -24,28 +24,15 @@ export default function BookingPage({ params }) {
         }
     }, [authLoading, isAuthenticated, router])
 
-    const handleBookingSubmit = async (bookingData) => {
+    const handleBookingSubmit = async (reservationResult) => {
         try {
-            if (!user?.id) {
-                alert('사용자 정보를 확인할 수 없습니다. 다시 로그인해주세요.')
-                router.push('/auth/login')
-                return
-            }
-
-            const reservationData = {
-                ...bookingData,
-                userId: user.id // 실제 로그인한 사용자의 UUID 사용
-            }
-
-            const result = await createReservation(reservationData)
-
-            // 예약 완료 후 성공 페이지로 이동
-            alert('예약이 완료되었습니다!')
-            router.push(`/booking/success?reservationId=${result.id}`)
+            // 결제 완료 후 성공 페이지로 이동
+            alert('결제가 완료되어 예약이 확정되었습니다!')
+            router.push(`/booking/success?reservationId=${reservationResult.id}`)
 
         } catch (error) {
-            console.error('예약 실패:', error)
-            alert('예약 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
+            console.error('예약 완료 처리 실패:', error)
+            alert('예약 완료 처리 중 오류가 발생했습니다.')
         }
     }
 

@@ -3,11 +3,14 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { BookingCalendar } from './booking-calendar'
+import { ReservationPayment } from './reservation-payment'
 
 export function BookingForm({ product, onSubmit, loading = false }) {
     const [selectedDateTime, setSelectedDateTime] = useState('')
     const [participants, setParticipants] = useState(1)
     const [specialRequests, setSpecialRequests] = useState('')
+    const [reservationData, setReservationData] = useState(null)
+    const [showPayment, setShowPayment] = useState(false)
 
     const handleSubmit = (e) => {
         e.preventDefault()
@@ -17,15 +20,35 @@ export function BookingForm({ product, onSubmit, loading = false }) {
             return
         }
 
-        onSubmit({
+        const reservation = {
             productId: product.id,
             reservationDate: selectedDateTime,
             participants,
             specialRequests: specialRequests.trim() || null
-        })
+        }
+
+        setReservationData(reservation)
+        setShowPayment(true)
+    }
+
+    const handlePaymentSuccess = (reservationResult) => {
+        // 결제 성공 후 부모 컴포넌트로 결과 전달
+        onSubmit(reservationResult)
     }
 
     const totalAmount = product.price * participants
+
+    if (showPayment) {
+        return (
+            <ReservationPayment
+                product={product}
+                reservationData={reservationData}
+                totalAmount={totalAmount}
+                onSuccess={handlePaymentSuccess}
+                onCancel={() => setShowPayment(false)}
+            />
+        )
+    }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -142,7 +165,7 @@ export function BookingForm({ product, onSubmit, loading = false }) {
                     className="w-full h-12 text-lg"
                     disabled={!selectedDateTime || loading}
                 >
-                    {loading ? '예약 처리 중...' : '예약하기'}
+                    {loading ? '처리 중...' : '결제하고 예약하기'}
                 </Button>
             </div>
         </form>
