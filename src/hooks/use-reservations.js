@@ -1,76 +1,115 @@
-import { useState } from 'react'
+'use client'
 
-export function useCreateReservation() {
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
+import { useEffect, useCallback } from 'react'
+import { useReservationStore } from '@/app/store/reservation-store'
+import {
+    getReservations,
+    getReservationDetail,
+    getReservationStats
+} from '@/actions/reservation-actions'
 
-    const createReservation = async (reservationData) => {
-        try {
-            setLoading(true)
-            setError(null)
-
-            const response = await fetch('/api/reservations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(reservationData),
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || '예약 생성에 실패했습니다')
-            }
-
-            return data
-        } catch (err) {
-            setError(err.message)
-            throw err
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    return {
-        createReservation,
+export function useReservations() {
+    const {
+        reservations,
+        filters,
         loading,
-        error
-    }
-}
+        error,
+        reservationStats,
+        setReservations,
+        setLoading,
+        setError,
+        setReservationStats,
+        clearError
+    } = useReservationStore()
 
-export function useReservations(userId) {
-    const [reservations, setReservations] = useState([])
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
-
-    const fetchReservations = async () => {
-        if (!userId) return
+    // 예약 목록 로드
+    const loadReservations = useCallback(async (customFilters = null) => {
+        setLoading(true)
+        clearError()
 
         try {
-            setLoading(true)
-            setError(null)
+            const filterToUse = customFilters || filters
+            const result = await getReservations(filterToUse)
 
-            const response = await fetch(`/api/reservations?userId=${userId}`)
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || '예약 목록을 가져올 수 없습니다')
+            if (result.success) {
+                setReservations(result.data)
+            } else {
+                setError(result.error)
             }
-
-            setReservations(data)
-        } catch (err) {
-            setError(err.message)
-            console.error('예약 목록 가져오기 실패:', err)
+        } catch (error) {
+            console.error('예약 목록 로딩 오류:', error)
+            setError('예약 목록을 불러오는 중 오류가 발생했습니다.')
         } finally {
             setLoading(false)
         }
-    }
+    }, [filters, setReservations, setLoading, setError, clearError])
+
+    // 예약 통계 로드
+    const loadReservationStats = useCallback(async () => {
+        try {
+            const result = await getReservationStats()
+
+            if (result.success) {
+                setReservationStats(result.data)
+            } else {
+                console.error('통계 로딩 오류:', result.error)
+            }
+        } catch (error) {
+            console.error('통계 로딩 중 오류:', error)
+        }
+    }, [setReservationStats])
+
+    // 예약 상세 정보 로드
+    const loadReservationDetail = useCallback(async (reservationId) => {
+        try {
+            const result = await getReservationDetail(reservationId)
+
+            if (result.success) {
+                return result.data
+            } else {
+                throw new Error(result.error)
+            }
+        } catch (error) {
+            console.error('예약 상세 정보 로딩 오류:', error)
+            throw error
+        }
+    }, [])
+
+    // 데이터 새로고침
+    const refreshData = useCallback(() => {
+        loadReservations()
+        loadReservationStats()
+    }, [loadReservations, loadReservationStats])
+
+    // 필터 변경 시 자동 로드
+    useEffect(() => {
+        loadReservations()
+    }, [filters.status, filters.date, filters.productId])
+
+    // 초기 로드
+    useEffect(() => {
+        loadReservationStats()
+    }, [loadReservationStats])
 
     return {
         reservations,
         loading,
         error,
-        fetchReservations
+        reservationStats,
+        loadReservations,
+        loadReservationDetail,
+        refreshData,
+        clearError
     }
+}
+
+export function useReservationDetail(reservationId) {
+    const { loadReservationDetail } = useReservations()
+
+    const getDetail = useCallback(async () => {
+        if (!reservationId) return null
+        return await loadReservationDetail(reservationId)
+    }, [reservationId, loadReservationDetail])
+
+    return { getDetail }
 } 
